@@ -5,9 +5,11 @@ from http import HTTPStatus
 from models.recipe import Recipe, recipe_list
 
 
+# /recipes
 class RecipeListResource(Resource):
 
     def get(self):
+        # get all recipes (that published)
         data = []
         for recipe in recipe_list:
             if recipe.is_publish is True:
@@ -15,6 +17,7 @@ class RecipeListResource(Resource):
         return {'data': data}, HTTPStatus.OK
 
     def post(self):
+        # create recipe
         data = request.get_json()
         recipe = Recipe(name=data['name'],
                         description=data['description'],
@@ -25,17 +28,20 @@ class RecipeListResource(Resource):
         return recipe.data, HTTPStatus.CREATED
 
 
+# /recipes/<int:recipe_id>
 class RecipeResource(Resource):
 
     def get(self, recipe_id):
-        recipe = next((recipe for recipe in recipe_list if recipe_id == recipe_id and recipe.is_publish == True), None)
+        # get the recipe
+        recipe = next((recipe for recipe in recipe_list if recipe.id == recipe_id and recipe.is_publish == True), None)
         if recipe is None:
             return {'message': 'recipe not found'}, HTTPStatus.NOT_FOUND
         return recipe.data, HTTPStatus.OK
 
     def put(self, recipe_id):
+        # modify the recipe
         data = request.get_json()
-        recipe = next((recipe for recipe in recipe_list if recipe_id == recipe_id), None)
+        recipe = next((recipe for recipe in recipe_list if recipe.id == recipe_id), None)
         if recipe is None:
             return {'message': 'recipe not found'}, HTTPStatus.NOT_FOUND
         recipe.name = data['name']
@@ -45,19 +51,29 @@ class RecipeResource(Resource):
         recipe.directions = data['directions']
         return recipe.data, HTTPStatus.OK
 
+    def delete(self, recipe_id):
+        # delete the recipe
+        recipe = next((recipe for recipe in recipe_list if recipe.id == recipe_id and recipe.is_publish == True), None)
+        if recipe is None:
+            return {'message': 'recipe not found'}, HTTPStatus.NOT_FOUND
+        recipe_list.remove(recipe)
+        return {}, HTTPStatus.NO_CONTENT
 
+
+# /recipes/<int:recipe_id>/publish
 class RecipePublishResource(Resource):
     def put(self, recipe_id):
-        recipe = next((recipe for recipe in recipe_list if recipe_id == recipe_id), None)
+        # modify the publish status of the recipe
+        recipe = next((recipe for recipe in recipe_list if recipe.id == recipe_id), None)
         if recipe is None:
             return {'message': 'recipe not found'}, HTTPStatus.NOT_FOUND
         recipe.is_publish = True
         return {}, HTTPStatus.NO_CONTENT
 
     def delete(self, recipe_id):
-        recipe = next((recipe for recipe in recipe_list if recipe_id == recipe_id), None)
+        # delete recipe
+        recipe = next((recipe for recipe in recipe_list if recipe.id == recipe_id), None)
         if recipe is None:
             return {'message': 'recipe not found'}, HTTPStatus.NOT_FOUND
         recipe.is_publish = False
         return {}, HTTPStatus.NO_CONTENT
-

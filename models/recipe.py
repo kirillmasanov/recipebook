@@ -26,5 +26,6 @@ class Recipe:
             'description': self.description,
             'num_of_servings': self.num_of_servings,
             'cook_time': self.cook_time,
-            'directions': self.directions
+            'directions': self.directions,
+            'is_publish': self.is_publish
         }
