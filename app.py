@@ -15,7 +15,7 @@ def create_app():
     register_extensions(app)
     register_resources(app)
 
-    return (app)
+    return app
 
 
 def register_extensions(app):
