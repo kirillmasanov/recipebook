@@ -4,8 +4,8 @@ from flask_restful import Api
 
 from config import Config
 from extensions import db
-from models.user import User
 from resources.recipe import RecipeListResource, RecipeResource, RecipePublishResource
+from resources.user import UserListResource
 
 
 def create_app():
@@ -26,6 +26,7 @@ def register_extensions(app):
 def register_resources(app):
     api = Api(app)
 
+    api.add_resource(UserListResource, '/users')
     api.add_resource(RecipeListResource, '/recipes')
     api.add_resource(RecipeResource, '/recipes/<int:recipe_id>')
     api.add_resource(RecipePublishResource, '/recipes/<int:recipe_id>/publish')

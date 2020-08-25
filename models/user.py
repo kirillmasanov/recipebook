@@ -24,4 +24,4 @@ class User(db.Model):
 
     def save(self):
         db.session.add(self)
-        db.commit()
+        db.session.commit()
