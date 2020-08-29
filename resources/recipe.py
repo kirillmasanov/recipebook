@@ -14,7 +14,7 @@ class RecipeListResource(Resource):
         recipes = Recipe.get_all_published()
         data = []
         for recipe in recipes:
-            data.append(recipe.data)
+            data.append(recipe.data())
         return {'data': data}, HTTPStatus.OK
 
     @jwt_required
@@ -79,18 +79,29 @@ class RecipeResource(Resource):
 
 # /recipes/<int:recipe_id>/publish
 class RecipePublishResource(Resource):
+
+    @jwt_required
     def put(self, recipe_id):
         # modify the publish status of the recipe
-        recipe = next((recipe for recipe in recipe_list if recipe.id == recipe_id), None)
+        recipe = Recipe.get_by_id(recipe_id=recipe_id)
         if recipe is None:
-            return {'message': 'recipe not found'}, HTTPStatus.NOT_FOUND
+            return {'message': 'Recipe not found'}, HTTPStatus.NOT_FOUND
+        current_user = get_jwt_identity()
+        if current_user != recipe.user_id:
+            return {'message': 'Access is not allowed'}, HTTPStatus.FORBIDDEN
         recipe.is_publish = True
+        recipe.save()
         return {}, HTTPStatus.NO_CONTENT
 
+    @jwt_required
     def delete(self, recipe_id):
         # delete recipe
-        recipe = next((recipe for recipe in recipe_list if recipe.id == recipe_id), None)
+        recipe = Recipe.get_by_id(recipe_id=recipe_id)
         if recipe is None:
-            return {'message': 'recipe not found'}, HTTPStatus.NOT_FOUND
+            return {'message': 'Recipe not found'}, HTTPStatus.NOT_FOUND
+        current_user = get_jwt_identity()
+        if current_user != recipe.user_id:
+            return {'message': 'Access is not allowed'}, HTTPStatus.FORBIDDEN
         recipe.is_publish = False
+        recipe.save()
         return {}, HTTPStatus.NO_CONTENT
