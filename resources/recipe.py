@@ -2,8 +2,13 @@ from flask_jwt_extended import get_jwt_identity, jwt_required, jwt_optional
 from flask import request
 from flask_restful import Resource
 from http import HTTPStatus
+from marshmallow import ValidationError
 
 from models.recipe import Recipe
+from schemas.recipe import RecipeSchema
+
+recipe_schema = RecipeSchema()
+recipe_list_schema = RecipeSchema(many=True)
 
 
 # /recipes
@@ -12,24 +17,22 @@ class RecipeListResource(Resource):
     def get(self):
         # get all recipes (that published)
         recipes = Recipe.get_all_published()
-        data = []
-        for recipe in recipes:
-            data.append(recipe.data())
-        return {'data': data}, HTTPStatus.OK
+        return recipe_list_schema.dump(recipes), HTTPStatus.OK
 
     @jwt_required
     def post(self):
         # create recipe
         json_data = request.get_json()
         current_user = get_jwt_identity()
-        recipe = Recipe(name=json_data['name'],
-                        description=json_data['description'],
-                        num_of_servings=json_data['num_of_servings'],
-                        cook_time=json_data['cook_time'],
-                        directions=json_data['directions'],
-                        user_id=current_user)
+        try:
+            data = recipe_schema.load(data=json_data)
+        except ValidationError as error:
+            errors = list(error.messages.values())
+            return {'message': 'Validation errors', 'errors': [x[0] for x in errors]}, HTTPStatus.BAD_REQUEST
+        recipe = Recipe(**data)
+        recipe.user_id = current_user
         recipe.save()
-        return recipe.data(), HTTPStatus.CREATED
+        return recipe_schema.dump(recipe), HTTPStatus.CREATED
 
 
 # /recipes/<int:recipe_id>
