@@ -1,11 +1,15 @@
-from flask import request
+from flask import request, url_for
 from flask_jwt_extended import jwt_optional, get_jwt_identity, jwt_required
 from flask_restful import Resource
+from marshmallow import ValidationError
+from mailgun import MailgunApi
 from http import HTTPStatus
 from webargs import fields
 from webargs.flaskparser import use_kwargs
 
-from utils import hash_password
+import os
+
+from utils import hash_password, generate_token, verify_token
 from models.recipe import Recipe
 from models.user import User
 from schemas.recipe import RecipeSchema
@@ -15,19 +19,33 @@ user_schema = UserSchema()
 user_public_schema = UserSchema(exclude=('email',))
 recipe_list_schema = RecipeSchema(many=True)
 
+mailgun = MailgunApi(domain=os.environ.get('MAILGUN_DOMAIN'),
+                     api_key=os.environ.get('MAILGUN_API_KEY'))
+
 
 class UserListResource(Resource):
     def post(self):
         json_data = request.get_json()
-        data, errors = user_schema.load(data=json_data)
-        if errors:
-            return {'message': 'Validation errors', 'errors': errors}, HTTPStatus.BAD_REQUEST
+        try:
+            data = user_schema.load(data=json_data)
+        except ValidationError as error:
+            errors = list(error.messages.values())
+            return {'message': 'Validation errors', 'errors': [x[0] for x in errors]}, HTTPStatus.BAD_REQUEST
         if User.get_by_username(data.get('username')):
             return {'message': 'username already used'}, HTTPStatus.BAD_REQUEST
         if User.get_by_email(data.get('email')):
             return {'message': 'email already used'}, HTTPStatus.BAD_REQUEST
         user = User(**data)
         user.save()
+        token = generate_token(user.email, salt='activate')
+        subject = 'Please confirm your registration.'
+        link = url_for('useractivateresource', token=token, _external=True)
+        text = f'Hi, Thanks for using Recipe book! Please confirm your registration by clicking on the link: {link}'
+        mailgun.send_email(to=user.email, subject=subject, text=text)
+        print('Письмо отправлено!')
+        print(user.email)
+        print(subject)
+        print(text)
         return user_schema.dump(user), HTTPStatus.CREATED
 
 
@@ -69,3 +87,18 @@ class UserRecipeListResource(Resource):
             visibility = 'public'
         recipes = Recipe.get_all_by_user(user_id=user.id, visibility=visibility)
         return recipe_list_schema.dump(recipes), HTTPStatus.OK
+
+
+class UserActivateResource(Resource):
+    def get(self, token):
+        email = verify_token(token, salt='activate')
+        if email is False:
+            return {'message': 'Invalid token or token expired'}, HTTPStatus.BAD_REQUEST
+        user = User.get_by_email(email=email)
+        if not user:
+            return {'message': 'User not found'}, HTTPStatus.NOT_FOUND
+        if user.is_active is True:
+            return {'message': 'The user account is already activated'}, HTTPStatus.BAD_REQUEST
+        user.is_active = True
+        user.save()
+        return {}, HTTPStatus.NO_CONTENT
