@@ -1,6 +1,11 @@
 from flask import current_app
+from flask_uploads import extension
 from itsdangerous import URLSafeTimedSerializer
 from passlib.hash import pbkdf2_sha256
+
+import uuid
+
+from extensions import image_set
 
 
 def hash_password(password):
@@ -24,3 +29,8 @@ def verify_token(token, max_age=(30 * 60), salt=None):
         return False
     return email
 
+
+def save_image(image, folder):
+    filename = f'{uuid.uuid4()}.{extension(image.filename)}'
+    image_set.save(image, folder=folder, name=filename)
+    return filename
