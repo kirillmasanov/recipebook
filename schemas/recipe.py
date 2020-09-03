@@ -1,3 +1,4 @@
+from flask import url_for
 from marshmallow import Schema, fields, post_dump, validate, validates, ValidationError
 
 from schemas.user import UserSchema
@@ -21,9 +22,10 @@ class RecipeSchema(Schema):
     cook_time = fields.Integer()
     directions = fields.String(validate=[validate.Length(max=1000)])
     is_publish = fields.Boolean(dump_only=True)
-    author = fields.Nested(UserSchema, attribute='user', dump_only=True, exclude=('email', ))
+    author = fields.Nested(UserSchema, attribute='user', dump_only=True, exclude=('email',))
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
+    cover_url = fields.Method(serialize='dump_cover_url')
 
     @post_dump(pass_many=True)
     def wrap(self, data, many, **kwargs):
@@ -37,3 +39,9 @@ class RecipeSchema(Schema):
             raise ValidationError('Cook time must be greater than 0.')
         if value > 300:
             raise ValidationError('Cook time must not be greater than 300.')
+
+    def dump_cover_url(self, recipe):
+        if recipe.cover_image:
+            return url_for('static', filename=f'images/recipes/{recipe.cover_image}', _external=True)
+        else:
+            return url_for('static', filename='images/assets/default-recipe-cover.jpg', _external=True)
