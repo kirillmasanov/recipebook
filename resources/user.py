@@ -12,14 +12,15 @@ import os
 from extensions import image_set
 from models.recipe import Recipe
 from models.user import User
-from schemas.recipe import RecipeSchema
+from schemas.recipe import RecipeSchema, RecipePaginationSchema
 from schemas.user import UserSchema
 from utils import generate_token, verify_token, save_image
 
+recipe_list_schema = RecipeSchema(many=True)
+recipe_pagination_schema = RecipePaginationSchema()
+user_avatar_schema = UserSchema(only=('avatar_url',))
 user_schema = UserSchema()
 user_public_schema = UserSchema(exclude=('email',))
-recipe_list_schema = RecipeSchema(many=True)
-user_avatar_schema = UserSchema(only=('avatar_url',))
 
 mailgun = MailgunApi(domain=os.environ.get('MAILGUN_DOMAIN'),
                      api_key=os.environ.get('MAILGUN_API_KEY'))
@@ -76,8 +77,10 @@ class MeResource(Resource):
 class UserRecipeListResource(Resource):
 
     @jwt_optional
-    @use_kwargs({'visibility': fields.Str(missing='public')}, location='query')
-    def get(self, username, visibility):
+    @use_kwargs({'page': fields.Int(missing=1),
+                 'per_page': fields.Int(missing=10),
+                 'visibility': fields.Str(missing='public')}, location='query')
+    def get(self, username, page, per_page, visibility):
         user = User.get_by_username(username=username)
         if user is None:
             return {'message': 'User not found'}, HTTPStatus.NOT_FOUND
@@ -86,8 +89,8 @@ class UserRecipeListResource(Resource):
             pass
         else:
             visibility = 'public'
-        recipes = Recipe.get_all_by_user(user_id=user.id, visibility=visibility)
-        return recipe_list_schema.dump(recipes), HTTPStatus.OK
+        paginated_recipes = Recipe.get_all_by_user(user_id=user.id, page=page, per_page=per_page, visibility=visibility)
+        return recipe_pagination_schema.dump(paginated_recipes), HTTPStatus.OK
 
 
 class UserActivateResource(Resource):

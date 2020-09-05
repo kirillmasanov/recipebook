@@ -34,8 +34,7 @@ class Recipe(db.Model):
             query = cls.query.filter_by(user_id=user_id, is_publish=True)
         elif visibility == 'private':
             query = cls.query.filter_by(user_id=user_id, is_publish=False)
-        else:
-            return query.order_by(desc(cls.created_at)).paginate(page=page, per_page=per_page)
+        return query.order_by(desc(cls.created_at)).paginate(page=page, per_page=per_page)
 
     def save(self):
         db.session.add(self)

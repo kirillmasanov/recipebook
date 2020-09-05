@@ -19,6 +19,7 @@ class PaginationSchema(Schema):
         return f'{request.base_url}?{urlencode(query_args)}'
 
     def get_pagination_links(self, paginated_objects):
+        print(paginated_objects)
         pagination_links = {
             'first': self.get_url(page=1),
             'last': self.get_url(page=paginated_objects.pages)
