@@ -24,12 +24,18 @@ class RecipeListResource(Resource):
 
     kwargs = {'q': fields.Str(missing=''),
               'page': fields.Int(missing=1),
-              'per_page': fields.Int(missing=20)}
+              'per_page': fields.Int(missing=20),
+              'sort': fields.Str(missing='created_at'),
+              'order': fields.Str(missing='desc')}
 
     @use_kwargs(kwargs, location='query')
-    def get(self, q, page, per_page):
+    def get(self, q, page, per_page, sort, order):
         # get all recipes (that published)
-        paginated_recipes = Recipe.get_all_published(q, page, per_page)
+        if sort not in ['created_at', 'cook_time', 'num_of_servings']:
+            sort = 'created_at'
+        if order not in ['asc', 'desc']:
+            order = 'desc'
+        paginated_recipes = Recipe.get_all_published(q, page, per_page, sort, order)
         return recipe_pagination_schema.dump(paginated_recipes), HTTPStatus.OK
 
     @jwt_required
