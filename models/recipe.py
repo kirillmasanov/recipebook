@@ -1,4 +1,5 @@
 from extensions import db
+from sqlalchemy import asc, desc
 
 
 class Recipe(db.Model):
@@ -18,21 +19,23 @@ class Recipe(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
 
     @classmethod
-    def get_all_published(cls):
-        return cls.query.filter_by(is_publish=True).all()
+    def get_all_published(cls, page, per_page):
+        return cls.query.filter_by(is_publish=True).order_by(desc(cls.created_at)).paginate(page=page,
+                                                                                            per_page=per_page)
 
     @classmethod
     def get_by_id(cls, recipe_id):
         return cls.query.filter_by(id=recipe_id).first()
 
     @classmethod
-    def get_all_by_user(cls, user_id, visibility='public'):
+    def get_all_by_user(cls, user_id, page, per_page, visibility='public'):
+        query = cls.query.filter_by(user_id=user_id)
         if visibility == 'public':
-            return cls.query.filter_by(user_id=user_id, is_publish=True).all()
+            query = cls.query.filter_by(user_id=user_id, is_publish=True)
         elif visibility == 'private':
-            return cls.query.filter_by(user_id=user_id, is_publish=False).all()
+            query = cls.query.filter_by(user_id=user_id, is_publish=False)
         else:
-            return cls.query.filter_by(user_id=user_id).all()
+            return query.order_by(desc(cls.created_at)).paginate(page=page, per_page=per_page)
 
     def save(self):
         db.session.add(self)
