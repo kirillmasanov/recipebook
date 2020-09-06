@@ -7,7 +7,7 @@ from PIL import Image
 import os
 import uuid
 
-from extensions import image_set
+from extensions import image_set, cache
 
 
 def hash_password(password):
@@ -48,7 +48,7 @@ def compress_image(filename, folder):
         maxsize = (1600, 1600)
         image.thumbnail(maxsize, Image.ANTIALIAS)
     compressed_filename = f'{uuid.uuid4()}.jpg'
-    compressed_file_path = image_set.path(filename=compressed_filename,folder=folder)
+    compressed_file_path = image_set.path(filename=compressed_filename, folder=folder)
     image.save(compressed_file_path, optimize=True, quality=85)
     original_size = os.stat(file_path).st_size
     compressed_size = os.stat(compressed_file_path).st_size
@@ -56,3 +56,8 @@ def compress_image(filename, folder):
     print(f'The file size is reduced by {percentage}%, from {original_size} to {compressed_size}.')
     os.remove(file_path)
     return compressed_filename
+
+
+def clear_cache(key_prefix):
+    keys = [key for key in cache.cache._cache.keys() if key.startswith(key_prefix)]
+    cache.delete_many(*keys)

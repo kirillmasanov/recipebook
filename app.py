@@ -35,18 +35,18 @@ def register_extensions(app):
         jti = decrypted_token['jti']
         return jti in black_list
 
-    @app.before_request
-    def before_request():
-        print('\n==================== BEFORE REQUEST====================\n')
-        print(cache.cache._cache.keys())
-        print('\n=======================================================\n')
-
-    @app.after_request
-    def after_request(response):
-        print('\n==================== AFTER REQUEST====================\n')
-        print(cache.cache._cache.keys())
-        print('\n=======================================================\n')
-        return response
+    # @app.before_request
+    # def before_request():
+    #     print('\n==================== BEFORE REQUEST====================\n')
+    #     print(cache.cache._cache.keys())
+    #     print('\n=======================================================\n')
+    #
+    # @app.after_request
+    # def after_request(response):
+    #     print('\n==================== AFTER REQUEST====================\n')
+    #     print(cache.cache._cache.keys())
+    #     print('\n=======================================================\n')
+    #     return response
 
 
 def register_resources(app):

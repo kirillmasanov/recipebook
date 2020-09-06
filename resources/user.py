@@ -14,7 +14,7 @@ from models.recipe import Recipe
 from models.user import User
 from schemas.recipe import RecipeSchema, RecipePaginationSchema
 from schemas.user import UserSchema
-from utils import generate_token, verify_token, save_image
+from utils import generate_token, verify_token, save_image, clear_cache
 
 recipe_list_schema = RecipeSchema(many=True)
 recipe_pagination_schema = RecipePaginationSchema()
@@ -124,4 +124,5 @@ class UserAvatarUploadResource(Resource):
         filename = save_image(image=file, folder='avatars')
         user.avatar_image = filename
         user.save()
+        clear_cache('/recipes')
         return user_avatar_schema.dump(user), HTTPStatus.OK
