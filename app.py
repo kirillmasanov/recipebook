@@ -4,7 +4,7 @@ from flask_restful import Api
 from flask_uploads import configure_uploads, patch_request_class
 
 from config import Config
-from extensions import db, jwt, image_set
+from extensions import db, cache, image_set, jwt
 from resources.recipe import RecipeListResource, RecipeResource, RecipePublishResource, RecipeCoverUploadResource
 from resources.user import UserListResource, UserResource, MeResource, UserRecipeListResource, UserActivateResource, \
     UserAvatarUploadResource
@@ -28,11 +28,25 @@ def register_extensions(app):
     jwt.init_app(app)
     configure_uploads(app, image_set)
     patch_request_class(app, 10 * 1024 * 1024)
+    cache.init_app(app)
 
     @jwt.token_in_blacklist_loader
     def check_if_token_in_black_list(decrypted_token):
         jti = decrypted_token['jti']
         return jti in black_list
+
+    @app.before_request
+    def before_request():
+        print('\n==================== BEFORE REQUEST====================\n')
+        print(cache.cache._cache.keys())
+        print('\n=======================================================\n')
+
+    @app.after_request
+    def after_request(response):
+        print('\n==================== AFTER REQUEST====================\n')
+        print(cache.cache._cache.keys())
+        print('\n=======================================================\n')
+        return response
 
 
 def register_resources(app):

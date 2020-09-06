@@ -8,7 +8,7 @@ from webargs.flaskparser import use_kwargs
 
 import os
 
-from extensions import image_set
+from extensions import image_set, cache
 from models.recipe import Recipe
 from schemas.recipe import RecipeSchema, RecipePaginationSchema
 from utils import save_image
@@ -29,8 +29,10 @@ class RecipeListResource(Resource):
               'order': fields.Str(missing='desc')}
 
     @use_kwargs(kwargs, location='query')
+    @cache.cached(timeout=60, query_string=True)
     def get(self, q, page, per_page, sort, order):
         # get all recipes (that published)
+        print('Quering the database..')
         if sort not in ['created_at', 'cook_time', 'num_of_servings']:
             sort = 'created_at'
         if order not in ['asc', 'desc']:
@@ -64,7 +66,7 @@ class RecipeResource(Resource):
         if recipe is None:
             return {'message': 'Recipe not found'}, HTTPStatus.NOT_FOUND
         current_user = get_jwt_identity()
-        if recipe.is_publish == False and recipe.user_id != current_user:
+        if recipe.is_publish is False and recipe.user_id != current_user:
             return {'message': 'Access is not allowed'}, HTTPStatus.FORBIDDEN
         return recipe_schema.dump(recipe), HTTPStatus.OK
 
