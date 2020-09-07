@@ -8,7 +8,7 @@ from webargs.flaskparser import use_kwargs
 
 import os
 
-from extensions import image_set, cache
+from extensions import image_set, cache, limiter
 from models.recipe import Recipe
 from schemas.recipe import RecipeSchema, RecipePaginationSchema
 from utils import save_image, clear_cache
@@ -21,7 +21,7 @@ recipe_pagination_schema = RecipePaginationSchema()
 
 # /recipes
 class RecipeListResource(Resource):
-
+    decorators = [limiter.limit('2 per minute', methods=['GET'], error_message='Too Many Requests')]
     kwargs = {'q': fields.Str(missing=''),
               'page': fields.Int(missing=1),
               'per_page': fields.Int(missing=20),
