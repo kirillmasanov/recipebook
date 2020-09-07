@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_migrate import Migrate
 from flask_restful import Api
 from flask_uploads import configure_uploads, patch_request_class
@@ -66,6 +66,11 @@ def register_resources(app):
     api.add_resource(UserListResource, '/users')
     api.add_resource(UserResource, '/users/<string:username>')
     api.add_resource(UserRecipeListResource, '/users/<string:username>/recipes')
+
+
+@limiter.request_filter
+def ip_whitelist():
+    return request.remote_addr == '127.0.0.1'
 
 
 if __name__ == '__main__':
