@@ -9,7 +9,7 @@ from webargs.flaskparser import use_kwargs
 
 import os
 
-from extensions import image_set
+from extensions import image_set, limiter
 from models.recipe import Recipe
 from models.user import User
 from schemas.recipe import RecipeSchema, RecipePaginationSchema
@@ -75,6 +75,7 @@ class MeResource(Resource):
 
 
 class UserRecipeListResource(Resource):
+    decorators = [limiter.limit('3/minute;30/hour;300/day', methods=['GET'], error_message='Too Many Requests')]
 
     @jwt_optional
     @use_kwargs({'page': fields.Int(missing=1),
