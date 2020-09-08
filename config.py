@@ -1,9 +1,9 @@
-class Config:
-    DEBUG = True
+import os
 
-    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://kirill:123@localhost/recipebook'
+
+class Config:
+    DEBUG = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = 'esfun3rnujnnWnwPV9efemu8127yhfn'
     JWT_ERROR_MESSAGE_KEY = 'message'
     JWT_BLACKLIST_ENABLED = True
     JWT_BLACKLIST_TOKEN_CHECKS = ['access', 'refresh']
@@ -11,3 +11,14 @@ class Config:
     CACHE_TYPE = 'simple'
     CACHE_DEFAULT_TIMEOUT = 10 * 60
     RATELIMIT_HEADERS_ENABLED = True
+
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+    SECRET_KEY = 'esfun3rnujnnWnwPV9efemu8127yhfn'
+    SQLALCHEMY_DATABASE_URI = 'postgresql+psycopg2://kirill:123@localhost/recipebook'
+
+
+class ProductionConfig(Config):
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
