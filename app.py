@@ -5,7 +5,6 @@ from flask_uploads import configure_uploads, patch_request_class
 
 import os
 
-from config import Config
 from extensions import db, cache, image_set, jwt, limiter
 from resources.recipe import RecipeListResource, RecipeResource, RecipePublishResource, RecipeCoverUploadResource
 from resources.user import UserListResource, UserResource, MeResource, UserRecipeListResource, UserActivateResource, \
@@ -17,6 +16,8 @@ def create_app():
     env = os.environ.get('ENV', 'Development')
     if env == 'Production':
         config_str = 'config.ProductionConfig'
+    elif env == 'Staging':
+        config_str = 'config.StagingConfig'
     else:
         config_str = 'config.DevelopmentConfig'
     app = Flask(__name__)
