@@ -109,12 +109,12 @@ Endpoint: ```{{url}}/recipes```
             },
             "created_at": "2020-09-06T00:38:20.194599",
             "updated_at": "2020-09-07T01:39:37.437151"
-        },
-// cut out
+        }
             ]
 }
 ```
-
+## Email confirmation
+![email_confirmation](email_confirmation.jpg)
 ## Book
 [Python API Development Fundamentals](https://www.amazon.com/Python-API-Development-Fundamentals-application/dp/1838983996)
 
